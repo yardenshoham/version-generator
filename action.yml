@@ -1,0 +1,12 @@
+name: 'Version Generator'
+description: 'Generate a version'
+outputs:
+  version:
+    description: "Version string"
+    value: ${{ steps.version-generator.outputs.version }}
+runs:
+  using: "composite"
+  steps:
+    - id: version-generator
+      run: echo "version=$(./version.sh)" >> $GITHUB_OUTPUT
+      shell: bash
