@@ -7,8 +7,25 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
-      shell: bash
     - id: version-generator
-      run: echo "version=$(./version.sh)" >> $GITHUB_OUTPUT
+      run: |
+        currentDate=$(date +%Y.%m.%d)
+        baseTag="${currentDate}-${GITHUB_RUN_ATTEMPT}"
+
+        # Check if on master branch
+        if [[ "$GITHUB_REF_NAME" == "master" ]]; then
+            echo "version=$baseTag"
+            exit 0
+        fi
+
+        # Check if on a release branch
+        if [[ "$GITHUB_REF_NAME" =~ ^release/[0-9]+\.[0-9]+$ ]]; then
+            releaseVersion=$(echo "$GITHUB_REF_NAME" | cut -d '/' -f 2)
+            echo "version=${releaseVersion}.${GITHUB_RUN_ATTEMPT}"
+            exit 0
+        fi
+
+        # Handle side branch
+        branch=$(echo "$GITHUB_REF_NAME" | sed 's/[/_+()]//g' | tr '/' '-')
+        echo "version=${baseTag}.${branch}" >> $GITHUB_OUTPUT
       shell: bash
